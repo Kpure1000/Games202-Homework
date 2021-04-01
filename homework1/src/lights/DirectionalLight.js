@@ -28,22 +28,7 @@ class DirectionalLight {
         // View transform
         mat4.lookAt(viewMatrix, this.lightPos, this.focalPoint, this.lightUp);
         // Projection transform
-
-        // let front = vec3.create();
-        // let right = vec3.create();
-        // let up = vec3.create();
-        // vec3.normalize(front, this.focalPoint - this.lightPos);
-        // vec3.cross(right, -this.lightUp, front);
-        // vec3.normalize(right, right);
-        // vec3.cross(up, right, front);
-        // let left_bottom = vec3.create();
-        // let horizontal = vec3.create();
-        // let vertical = vec3.create();
-        // left_bottom = this.focalPoint - this.lightPos + front - resolution / 2 * right - resolution / 2 * up;
-        // horizontal = resolution * right;
-        // vertical = resolution * up;
-
-        mat4.ortho(projectionMatrix, 0, resolution, 0, resolution, 0.1, 100.0);
+        mat4.ortho(projectionMatrix, -resolution, resolution, -resolution, resolution, 0.1, 100.0);
 
         mat4.multiply(lightMVP, projectionMatrix, viewMatrix);
         mat4.multiply(lightMVP, lightMVP, modelMatrix);
