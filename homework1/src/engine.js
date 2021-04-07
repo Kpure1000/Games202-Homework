@@ -69,19 +69,32 @@ function GAMES202Main() {
 	// loadOBJ(renderer, 'assets/basic/', 'sphere', 'PhongMaterial', sphereTransform);
 	//loadOBJ(renderer, 'assets/basic/', 'plane', 'PhongMaterial', floorTransform);
 
+	var guiParams = {
+        DynamicLight: false,
+        lightPosX: 0,
+        lightPosY: 80,
+        lightPosZ: 80,
+    }
 
 	function createGUI() {
 		const gui = new dat.gui.GUI();
-		// const panelModel = gui.addFolder('Model properties');
-		// panelModelTrans.add(GUIParams, 'x').name('X');
-		// panelModel.open();
+		const lightModule = gui.addFolder("Light Properties");
+		const panelLightPos = lightModule.addFolder("Light Pos");
+        panelLightPos.add(guiParams, 'DynamicLight').name('Dynamic Light');
+        panelLightPos.add(guiParams, 'lightPosX').name('X');
+        panelLightPos.add(guiParams, 'lightPosY').name('Y');
+        panelLightPos.add(guiParams, 'lightPosZ').name('Z');
+		lightModule.open();
+		panelLightPos.open();
 	}
 	createGUI();
+
+
 
 	function mainLoop(now) {
 		cameraControls.update();
 
-		renderer.render();
+		renderer.render(guiParams);
 		requestAnimationFrame(mainLoop);
 	}
 	requestAnimationFrame(mainLoop);
