@@ -17,7 +17,7 @@ class WebGLRenderer {
     addMeshRender(mesh) { this.meshes.push(mesh); }
     addShadowMeshRender(mesh) { this.shadowMeshes.push(mesh); }
 
-    render() {
+    render(guiParams) {
         const gl = this.gl;
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
@@ -27,6 +27,18 @@ class WebGLRenderer {
 
         console.assert(this.lights.length != 0, "No light");
         console.assert(this.lights.length == 1, "Multiple lights");
+
+        let directLightPos
+        if(guiParams.DynamicLight){
+            const timer = Date.now() * 0.00025;
+            directLightPos = [ Math.sin(timer * 6) * 100, 
+                         Math.cos(timer * 4) * 150, 
+                         Math.cos(timer * 2) * 100 ];
+        }
+        else{
+            directLightPos = [ guiParams.lightPosX, guiParams.lightPosY, guiParams.lightPosZ];
+        }
+        this.lights[0].entity.lightPos = directLightPos;
 
         for (let l = 0; l < this.lights.length; l++) {
             // Draw light

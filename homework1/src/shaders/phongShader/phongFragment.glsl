@@ -105,9 +105,8 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 
 
 float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
-  float closestDepth = unpack(vec4(texture2D(shadowMap, shadowCoord.xy)));
-  float currentDepth = unpack(shadowCoord);
-  return currentDepth > closestDepth ? 1.0 : 0.0;
+  float bias = 0.0006;
+  return unpack(vec4(texture2D(shadowMap, shadowCoord.xy))) + bias > shadowCoord.z ? 1.0 : 0.0;
   // return 1.0;
 }
 
