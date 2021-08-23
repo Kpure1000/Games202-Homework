@@ -86,7 +86,18 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
 }
 
 float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
-	return 1.0;
+  vec2 texelSize = 1.0 / vec2(2048.0, 2048.0);
+  float avgDepth=0.0;
+  int blockCount=0;
+  poissonDiskSamples(uv);
+  for(int i=0;i<NUM_SAMPLES;i++){
+    float blockDepth = bias + unpack(vec4(texture2D(shadowMap, uv + 2.0 * poissonDisk[i] * texelSize)));
+    if(blockDepth < zReceiver){
+      avgDepth+=blockDepth;
+      blockCount++;
+    }
+  }
+	return blockCount > 0 ? avgDepth / float(blockCount) : 1.0;
 }
 
 float PCF(sampler2D shadowMap, vec4 coords) {
@@ -95,23 +106,35 @@ float PCF(sampler2D shadowMap, vec4 coords) {
   // uniformDiskSamples(coords.xy);
   poissonDiskSamples(coords.xy);
   for(int i=0; i<NUM_SAMPLES; i++){
-    float pcfDepth = unpack(vec4(texture2D(shadowMap, coords.xy + 2.0 * poissonDisk[i] * texelSize)));
+    float pcfDepth = unpack(vec4(texture2D(shadowMap, coords.xy + 1.0 * poissonDisk[i] * texelSize)));
     shadow += pcfDepth + bias > coords.z ? 1.0 : 0.0;
   }
   shadow /= float(NUM_SAMPLES);
   return shadow;
 }
 
-float PCSS(sampler2D shadowMap, vec4 coords){
+#define LIGHT_AREA 2.0
 
+float PCSS(sampler2D shadowMap, vec4 coords){
+  vec2 texelSize = 1.0 / vec2(2048.0, 2048.0);
+  float cur_depth = coords.z;
   // STEP 1: avgblocker depth
-  findBlocker(shadowMap, coords.xy, coords.z);
+  float avg_depth = findBlocker(shadowMap, coords.xy, cur_depth);
 
   // STEP 2: penumbra size
+  float filter_area = 0.0;
+  filter_area = (cur_depth - avg_depth) * LIGHT_AREA / avg_depth;
 
   // STEP 3: filtering
-  
-  return 1.0;
+  float shadow = 0.0;
+  poissonDiskSamples(coords.xy);
+  for(int i=0; i<NUM_SAMPLES; i++){
+    float pcfDepth = unpack(vec4(texture2D(shadowMap, coords.xy + filter_area * poissonDisk[i] * texelSize)));
+    shadow += pcfDepth + bias > coords.z ? 1.0 : 0.0;
+  }
+  shadow /= float(NUM_SAMPLES);
+
+  return shadow;
 
 }
 
@@ -156,8 +179,8 @@ void main(void) {
   vec3 shadowCoord = vPositionFromLight.xyz / vPositionFromLight.w;
   shadowCoord = shadowCoord * 0.5 + 0.5;
   // visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
-  // visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
+  // visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
+  visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
 
   gl_FragColor = vec4(phongColor * visibility, 1.0);
